@@ -1,8 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { strict as assert } from 'node:assert';
 import { mm, MockApplication } from '@eggjs/mock';
 import { Context } from '@eggjs/core';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('test/onerror.test.ts', () => {
   let app: MockApplication;
@@ -292,7 +296,7 @@ describe('test/onerror.test.ts', () => {
       await app.httpRequest()
         .post('/body_parser')
         .set('Content-Type', 'application/x-www-form-urlencoded')
-        .send({ foo: new Buffer(1024 * 1000).fill(1).toString() })
+        .send({ foo: Buffer.alloc(1024 * 1000).fill(1).toString() })
         .expect(/request entity too large/)
         .expect(413);
       await app.close();

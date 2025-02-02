@@ -20,7 +20,7 @@ Default error handling plugin for egg.
 ## Install
 
 ```bash
-npm i egg-onerror
+npm i egg-onerror@2
 ```
 
 ## Usage

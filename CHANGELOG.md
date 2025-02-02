@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.0.0](https://github.com/eggjs/onerror/compare/v2.4.0...v3.0.0) (2025-02-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop Node.js < 18.19.0 support
+
+part of https://github.com/eggjs/egg/issues/3644
+
+https://github.com/eggjs/egg/issues/5257
+
+### Features
+
+* support cjs and esm both by tshy ([#40](https://github.com/eggjs/onerror/issues/40)) ([c51c391](https://github.com/eggjs/onerror/commit/c51c391f3772dc920dd258a345123a455c03d0fc))
+
 ## [2.4.0](https://github.com/eggjs/egg-onerror/compare/v2.3.1...v2.4.0) (2024-10-13)
 
 

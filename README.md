@@ -1,26 +1,29 @@
-# egg-onerror
+# @eggjs/onerror
 
 [![NPM version][npm-image]][npm-url]
-[![Node.js CI](https://github.com/eggjs/egg-onerror/actions/workflows/nodejs.yml/badge.svg)](https://github.com/eggjs/egg-onerror/actions/workflows/nodejs.yml)
+[![Node.js CI](https://github.com/eggjs/onerror/actions/workflows/nodejs.yml/badge.svg)](https://github.com/eggjs/onerror/actions/workflows/nodejs.yml)
 [![Test coverage][codecov-image]][codecov-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
 [![npm download][download-image]][download-url]
+[![Node.js Version](https://img.shields.io/node/v/@eggjs/onerror.svg?style=flat)](https://nodejs.org/en/download/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/eggjs/onerror)
 
-[npm-image]: https://img.shields.io/npm/v/egg-onerror.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/egg-onerror
-[codecov-image]: https://codecov.io/github/eggjs/egg-onerror/coverage.svg?branch=master
-[codecov-url]: https://codecov.io/github/eggjs/egg-onerror?branch=master
-[snyk-image]: https://snyk.io/test/npm/egg-onerror/badge.svg?style=flat-square
-[snyk-url]: https://snyk.io/test/npm/egg-onerror
-[download-image]: https://img.shields.io/npm/dm/egg-onerror.svg?style=flat-square
-[download-url]: https://npmjs.org/package/egg-onerror
+[npm-image]: https://img.shields.io/npm/v/@eggjs/onerror.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/@eggjs/onerror
+[codecov-image]: https://codecov.io/github/eggjs/onerror/coverage.svg?branch=master
+[codecov-url]: https://codecov.io/github/eggjs/onerror?branch=master
+[snyk-image]: https://snyk.io/test/npm/@eggjs/onerror/badge.svg?style=flat-square
+[snyk-url]: https://snyk.io/test/npm/@eggjs/onerror
+[download-image]: https://img.shields.io/npm/dm/@eggjs/onerror.svg?style=flat-square
+[download-url]: https://npmjs.org/package/@eggjs/onerror
 
 Default error handling plugin for egg.
 
 ## Install
 
 ```bash
-npm i egg-onerror
+npm i @eggjs/onerror
 ```
 
 ## Usage
@@ -55,10 +58,10 @@ Please open an issue [here](https://github.com/eggjs/egg/issues).
 
 ## License
 
-[MIT](https://github.com/eggjs/egg-onerror/blob/master/LICENSE)
+[MIT](https://github.com/eggjs/onerror/blob/master/LICENSE)
 
 ## Contributors
 
-[![Contributors](https://contrib.rocks/image?repo=eggjs/egg-onerror)](https://github.com/eggjs/egg-onerror/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=eggjs/onerror)](https://github.com/eggjs/onerror/graphs/contributors)
 
 Made with [contributors-img](https://contrib.rocks).

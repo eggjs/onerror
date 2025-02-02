@@ -1,10 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const assert = require('assert');
-const mm = require('egg-mock');
+import fs from 'node:fs';
+import path from 'node:path';
+import { strict as assert } from 'node:assert';
+import { mm, MockApplication } from '@eggjs/mock';
+import { Context } from '@eggjs/core';
 
-describe('test/onerror.test.js', () => {
-  let app;
+describe('test/onerror.test.ts', () => {
+  let app: MockApplication;
   before(() => {
     mm.env('local');
     mm.consoleLevel('NONE');
@@ -23,7 +24,7 @@ describe('test/onerror.test.js', () => {
     await app.ready();
     const err = new Error('mock test error');
     app.emit('error', err, null);
-    err.status = 400;
+    (err as any).status = 400;
     app.emit('error', err, null);
     app.close();
   });
@@ -98,7 +99,7 @@ describe('test/onerror.test.js', () => {
   });
 
   it('should support custom accpets return err.stack', () => {
-    mm(app.config.onerror, 'accepts', ctx => {
+    mm(app.config.onerror, 'accepts', (ctx: Context) => {
       if (ctx.get('x-requested-with') === 'XMLHttpRequest') return 'json';
       return 'html';
     });
@@ -243,7 +244,7 @@ describe('test/onerror.test.js', () => {
   });
 
   describe('customize', () => {
-    let app;
+    let app: MockApplication;
     before(() => {
       mm.consoleLevel('NONE');
       app = mm.app({
@@ -303,7 +304,7 @@ describe('test/onerror.test.js', () => {
   }
 
   describe('no errorpage', () => {
-    let app;
+    let app: MockApplication;
     before(() => {
       mm.consoleLevel('NONE');
       app = app = mm.app({
@@ -323,7 +324,7 @@ describe('test/onerror.test.js', () => {
   });
 
   describe('app.errorpage.url=/500', () => {
-    let app;
+    let app: MockApplication;
     before(() => {
       mm.consoleLevel('NONE');
       app = app = mm.app({
@@ -359,7 +360,7 @@ describe('test/onerror.test.js', () => {
   });
 
   describe('onerror.ctx.error env=local', () => {
-    let app;
+    let app: MockApplication;
     before(() => {
       mm.env('local');
       mm.consoleLevel('NONE');
@@ -379,7 +380,7 @@ describe('test/onerror.test.js', () => {
   });
 
   describe('onerror.ctx.error env=unittest', () => {
-    let app;
+    let app: MockApplication;
     before(() => {
       mm.consoleLevel('NONE');
       app = mm.app({
@@ -398,7 +399,7 @@ describe('test/onerror.test.js', () => {
   });
 
   describe('appErrorFilter', () => {
-    let app;
+    let app: MockApplication;
     before(() => {
       mm.consoleLevel('NONE');
       app = mm.app({
@@ -419,19 +420,19 @@ describe('test/onerror.test.js', () => {
     });
 
     it('should custom log error log', async () => {
-      let lastMessage;
-      mm(app.logger, 'error', msg => {
+      let lastMessage = '';
+      mm(app.logger, 'error', (msg: string) => {
         lastMessage = msg;
       });
       await app.httpRequest()
         .get('/?name=CustomError')
         .expect(500);
-      assert(lastMessage === 'error happened');
+      assert.equal(lastMessage, 'error happened');
     });
 
     it('should default log error', async () => {
-      let lastError;
-      mm(app.logger, 'log', (LEVEL, args) => {
+      let lastError: Error | undefined;
+      mm(app.logger, 'log', (_LEVEL: string, args: any[]) => {
         lastError = args[0];
       });
 
@@ -439,12 +440,12 @@ describe('test/onerror.test.js', () => {
         .get('/?name=OtherError')
         .expect(500);
       assert(lastError);
-      assert(lastError.name === 'OtherError');
+      assert.equal(lastError.name, 'OtherError');
     });
   });
 
   describe('agent emit error', () => {
-    let app;
+    let app: MockApplication;
     before(() => {
       app = mm.cluster({
         baseDir: 'agent-error',
@@ -463,8 +464,7 @@ describe('test/onerror.test.js', () => {
   });
 
   describe('replace onerror default template', () => {
-
-    let app = null;
+    let app: MockApplication;
     before(() => {
       mm.consoleLevel('NONE');
       app = mm.app({

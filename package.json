@@ -1,51 +1,94 @@
 {
-  "name": "egg-onerror",
+  "name": "@eggjs/onerror",
   "version": "2.4.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "error handler for egg",
   "eggPlugin": {
     "name": "onerror",
     "optionalDependencies": [
       "jsonp"
-    ]
+    ],
+    "exports": {
+      "import": "./dist/esm",
+      "require": "./dist/commonjs",
+      "typescript": "./src"
+    }
   },
-  "files": [
-    "config",
-    "lib",
-    "app.js",
-    "agent.js"
-  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/eggjs/egg-onerror.git"
+    "url": "https://github.com/eggjs/onerror.git"
   },
   "keywords": [
     "egg",
     "egg-plugin",
     "onerror"
   ],
+  "author": "dead_horse",
+  "engines": {
+    "node": ">= 18.19.0"
+  },
   "dependencies": {
-    "cookie": "^0.7.2",
-    "koa-onerror": "^4.0.0",
-    "mustache": "^2.3.0",
+    "@eggjs/core": "^6.3.1",
+    "cookie": "^1.0.2",
+    "koa-onerror": "^5.0.1",
+    "mustache": "^4.2.0",
     "stack-trace": "^0.0.10"
   },
   "devDependencies": {
-    "egg": "^3.7.0",
-    "egg-bin": "^5.5.0",
-    "egg-mock": "^5.3.0",
-    "eslint": "^8.29.0",
-    "eslint-config-egg": "^12.1.0",
-    "mocha": "^10.7.3"
-  },
-  "engines": {
-    "node": ">=8.0.0"
+    "@arethetypeswrong/cli": "^0.17.3",
+    "@eggjs/bin": "7",
+    "@eggjs/mock": "^6.0.5",
+    "@eggjs/tsconfig": "1",
+    "@types/mocha": "10",
+    "@types/mustache": "^4.2.5",
+    "@types/node": "22",
+    "@types/stack-trace": "^0.0.33",
+    "egg": "^4.0.3",
+    "eslint": "8",
+    "eslint-config-egg": "14",
+    "rimraf": "6",
+    "tshy": "3",
+    "tshy-after": "1",
+    "typescript": "5"
   },
   "scripts": {
-    "test": "npm run lint -- --fix && npm run test-local",
-    "test-local": "egg-bin test",
-    "cov": "egg-bin cov",
-    "lint": "eslint .",
-    "ci": "npm run lint && npm run cov"
+    "lint": "eslint --cache src test --ext .ts",
+    "pretest": "npm run clean && npm run lint -- --fix",
+    "test": "egg-bin test",
+    "test:snapshot:update": "SNAPSHOT_UPDATE=1 egg-bin test",
+    "preci": "npm run clean &&  npm run lint",
+    "ci": "egg-bin cov",
+    "postci": "npm run prepublishOnly && npm run clean",
+    "clean": "rimraf dist",
+    "prepublishOnly": "tshy && tshy-after && attw --pack"
   },
-  "author": "dead_horse"
+  "type": "module",
+  "tshy": {
+    "exports": {
+      ".": "./src/index.ts",
+      "./package.json": "./package.json"
+    }
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/index.d.ts",
+        "default": "./dist/commonjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "types": "./dist/commonjs/index.d.ts",
+  "main": "./dist/commonjs/index.js",
+  "module": "./dist/esm/index.js"
 }

@@ -1,20 +1,39 @@
 // modify from https://github.com/poppinss/youch/blob/develop/src/Youch/index.js
 
-const fs = require('fs');
-const path = require('path');
-const cookie = require('cookie');
-const Mustache = require('mustache');
-const stackTrace = require('stack-trace');
-const util = require('util');
+import fs from 'node:fs';
+import path from 'node:path';
+import util from 'node:util';
+import { parse } from 'cookie';
+import Mustache from 'mustache';
+import stackTrace, { type StackFrame } from 'stack-trace';
+import { detectErrorMessage } from './utils.js';
+import type { OnerrorError } from 'koa-onerror';
+import type { Context } from '@eggjs/core';
 
-const { detectErrorMessage } = require('./utils');
 const startingSlashRegex = /\\|\//;
 
-class ErrorView {
-  constructor(ctx, error, template) {
-    this.codeContext = 5;
-    this._filterHeaders = [ 'cookie', 'connection' ];
+export interface FrameSource {
+  pre: string[];
+  line: string;
+  post: string[];
+}
 
+export interface Frame extends StackFrame {
+  context?: FrameSource;
+}
+
+export class ErrorView {
+  ctx: Context;
+  error: OnerrorError;
+  request: Context['request'];
+  app: Context['app'];
+  assets: Map<string, string>;
+  viewTemplate: string;
+
+  codeContext = 5;
+  _filterHeaders = [ 'cookie', 'connection' ];
+
+  constructor(ctx: Context, error: OnerrorError, template: string) {
     this.ctx = ctx;
     this.error = error;
     this.request = ctx.request;
@@ -28,7 +47,7 @@ class ErrorView {
    *
    * @return {String} html page
    */
-  toHTML() {
+  toHTML(): string {
     const stack = this.parseError();
     const data = this.serializeData(stack, (frame, index) => {
       const serializedFrame = this.serializeFrame(frame);
@@ -36,10 +55,11 @@ class ErrorView {
       return serializedFrame;
     });
 
-    data.request = this.serializeRequest();
-    data.appInfo = this.serializeAppInfo();
-
-    return this.complieView(this.viewTemplate, data);
+    return this.compileView(this.viewTemplate, {
+      ...data,
+      appInfo: this.serializeAppInfo(),
+      request: this.serializeRequest(),
+    });
   }
 
   /**
@@ -47,10 +67,8 @@ class ErrorView {
    *
    * @param {String} tpl - template
    * @param {Object} locals - data used by template
-   *
-   * @return {String} html
    */
-  complieView(tpl, locals) {
+  compileView(tpl: string, locals: Record<string, unknown>) {
     return Mustache.render(tpl, locals);
   }
 
@@ -58,9 +76,8 @@ class ErrorView {
    * check if the frame is node native file.
    *
    * @param {Frame} frame - current frame
-   * @return {Boolean} bool
    */
-  isNode(frame) {
+  isNode(frame: Frame) {
     if (frame.isNative()) {
       return true;
     }
@@ -72,9 +89,8 @@ class ErrorView {
    * check if the frame is app modules.
    *
    * @param {Object} frame - current frame
-   * @return {Boolean} bool
    */
-  isApp(frame) {
+  isApp(frame: Frame) {
     if (this.isNode(frame)) {
       return false;
     }
@@ -88,7 +104,7 @@ class ErrorView {
    * @param {String} key - assert key
    * @param {String} value - assert content
    */
-  setAssets(key, value) {
+  setAssets(key: string, value: string) {
     this.assets.set(key, value);
   }
 
@@ -97,17 +113,16 @@ class ErrorView {
    *
    * @param {String} key - assert key
    */
-  getAssets(key) {
-    this.assets.get(key);
+  getAssets(key: string) {
+    return this.assets.get(key);
   }
 
   /**
    * get frame source
    *
    * @param {Object} frame - current frame
-   * @return {Object} frame source
    */
-  getFrameSource(frame) {
+  getFrameSource(frame: StackFrame): FrameSource {
     const filename = frame.getFileName();
     const lineNumber = frame.getLineNumber();
     let contents = this.getAssets(filename);
@@ -126,12 +141,10 @@ class ErrorView {
 
   /**
    * parse error and return frame stack
-   *
-   * @return {Array} frame
    */
   parseError() {
     const stack = stackTrace.parse(this.error);
-    return stack.map(frame => {
+    return stack.map((frame: Frame) => {
       if (!this.isNode(frame)) {
         frame.context = this.getFrameSource(frame);
       }
@@ -143,9 +156,8 @@ class ErrorView {
    * get stack context
    *
    * @param {Object} frame - current frame
-   * @return {Object} context
    */
-  getContext(frame) {
+  getContext(frame: Frame) {
     if (!frame.context) {
       return {};
     }
@@ -163,10 +175,9 @@ class ErrorView {
    *
    * @param {any} frame - current frame
    * @param {any} index - current index
-   * @return {String} classes
    */
-  getFrameClasses(frame, index) {
-    const classes = [];
+  getFrameClasses(frame: Frame, index: number) {
+    const classes: string[] = [];
     if (index === 0) {
       classes.push('active');
     }
@@ -182,9 +193,8 @@ class ErrorView {
    * serialize frame and return meaningful data
    *
    * @param {Object} frame - current frame
-   * @return {Object} frame result
    */
-  serializeFrame(frame) {
+  serializeFrame(frame: Frame) {
     const filename = frame.getFileName();
     const relativeFileName = filename.includes(process.cwd())
       ? filename.replace(process.cwd(), '').replace(startingSlashRegex, '')
@@ -198,6 +208,7 @@ class ErrorView {
       line: frame.getLineNumber(),
       column: frame.getColumnNumber(),
       context: this.getContext(frame),
+      classes: '',
     };
   }
 
@@ -205,11 +216,10 @@ class ErrorView {
    * serialize base data
    *
    * @param {Object} stack - frame stack
-   * @param {Function} frameFomatter - frame fomatter function
-   * @return {Object} data
+   * @param {Function} frameFormatter - frame formatter function
    */
-  serializeData(stack, frameFomatter) {
-    const code = this.error.code || this.error.type;
+  serializeData(stack: Frame[], frameFormatter: (frame: Frame, index: number) => any) {
+    const code = Reflect.get(this.error, 'code') ?? Reflect.get(this.error, 'type');
     let message = detectErrorMessage(this.ctx, this.error);
     if (code) {
       message = `${message} (code: ${code})`;
@@ -219,17 +229,15 @@ class ErrorView {
       message,
       name: this.error.name,
       status: this.error.status,
-      frames: stack instanceof Array ? stack.filter(frame => frame.getFileName()).map(frameFomatter) : [],
+      frames: stack instanceof Array ? stack.filter(frame => frame.getFileName()).map(frameFormatter) : [],
     };
   }
 
   /**
    * serialize request object
-   *
-   * @return {Object} request object
    */
   serializeRequest() {
-    const headers = [];
+    const headers: { key: string; value: string | string[] | undefined }[] = [];
 
     Object.keys(this.request.headers).forEach(key => {
       if (this._filterHeaders.includes(key)) {
@@ -241,14 +249,14 @@ class ErrorView {
       });
     });
 
-    const parsedCookies = cookie.parse(this.request.headers.cookie || '');
+    const parsedCookies = parse(this.request.headers.cookie || '');
     const cookies = Object.keys(parsedCookies).map(key => {
       return { key, value: parsedCookies[key] };
     });
 
     return {
       url: this.request.url,
-      httpVersion: this.request.httpVersion,
+      httpVersion: this.request.req.httpVersion,
       method: this.request.method,
       connection: this.request.headers.connection,
       headers,
@@ -258,19 +266,16 @@ class ErrorView {
 
   /**
    * serialize app info object
-   *
-   * @return {Object} egg app info
    */
   serializeAppInfo() {
     let config = this.app.config;
-    if (typeof this.app.dumpConfigToObject === 'function') {
+    if ('dumpConfigToObject' in this.app && typeof this.app.dumpConfigToObject === 'function') {
       config = this.app.dumpConfigToObject().config.config;
     }
     return {
-      baseDir: this.app.config.baseDir,
+      baseDir: this.app.config.baseDir as string,
       config: util.inspect(config),
     };
   }
 }
 
-module.exports = ErrorView;
